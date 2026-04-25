@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Zetta Clicker</title>
+    <script src="https://tailwindcss.com"></script>
+    <style>
+        @import url('https://googleapis.com');
+        
+        body, html {
+            height: 100%; margin: 0; padding: 0; overflow: hidden;
+            background: #000; font-family: 'Inter', sans-serif;
+            color: white; -webkit-user-select: none;
+        }
+
+        /* Background Glow kyak di gambar */
+        #app {
+            height: 100dvh; width: 100%;
+            background: radial-gradient(circle at 50% 50%, #1c1c10 0%, #000 70%);
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        /* Glassmorphism Card */
+        .glass {
+            background: rgba(15, 15, 15, 0.7);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Bitcoin Coin - Diperkecil dikit biar proporsional */
+        .coin-wrapper {
+            position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        .btc-coin {
+            width: 220px; height: 220px;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #8a6d00);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.15), inset -8px -8px 15px rgba(0,0,0,0.4);
+            cursor: pointer; transition: transform 0.05s;
+        }
+
+        .btc-coin::after {
+            content: '₿'; font-size: 110px; color: rgba(255, 255, 255, 0.85);
+            font-weight: 800;
+        }
+
+        .btc-coin:active { transform: scale(0.94); }
+
+        /* Floating Text Anim */
+        .tap-text {
+            position: absolute; color: #ffd700; font-weight: 800; font-size: 1.25rem;
+            pointer-events: none; animation: floatUp 0.7s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            to { transform: translateY(-100px); opacity: 0; }
+        }
+
+        /* Garis Cyan kyak di gambar */
+        .shooting-line {
+            position: absolute; width: 100px; height: 2px;
+            background: linear-gradient(90deg, transparent, #00f2ff);
+            transform: rotate(-30deg); top: 20%; left: 15%; opacity: 0.6;
+        }
+
+        /* Bottom Nav - Fix di bawah */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(5, 5, 5, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; justify-content: space-around;
+            padding: 10px 0 25px 0; /* Padding bawah extra buat gesture bar HP */
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="shooting-line"></div>
+
+    <!-- Header Section -->
+    <div class="p-4 w-full max-w-md mx-auto">
+        <div class="glass rounded-2xl p-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="https://dicebear.com" class="w-10 h-10 rounded-full border border-yellow-500/30">
+                <div>
+                    <div class="text-[12px] font-bold text-white">Zetta Hunter</div>
+                    <div class="text-[10px] text-gray-500">@zettahunter</div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-yellow-500 font-extrabold text-sm tracking-wide">128.4K</div>
+                <div class="text-[9px] text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20">🏆 Rank #42</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="flex px-4 gap-3 w-full max-w-md mx-auto">
+        <div class="flex-1 glass rounded-xl p-2.5 flex items-center gap-2">
+            <span class="text-yellow-500 text-sm">⚡</span>
+            <div>
+                <div class="text-gray-500 text-[8px] uppercase font-bold tracking-tighter">Zetta Points</div>
+                <div class="text-white font-bold text-[11px]">98.2K</div>
+            </div>
+        </div>
+        <div class="flex-1 glass rounded-xl p-2.5 flex items-center gap-2">
+            <span class="text-gray-400 text-sm">🎬</span>
+            <div>
+                <div class="text-gray-500 text-[8px] uppercase font-bold tracking-tighter">Iklan Tersisa</div>
+                <div class="text-white font-bold text-[11px]">15/15</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Section (Coin Area) -->
+    <div class="flex-1 flex flex-col items-center justify-center -mt-10">
+        <div class="coin-wrapper" id="click-area">
+            <div class="btc-coin"></div>
+        </div>
+        <div class="mt-6 text-gray-500 text-[10px] font-semibold tracking-widest uppercase opacity-60">
+            +10 Zetta Coin per klik
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="flex flex-col items-center gap-1 text-yellow-500">
+            <span class="text-xl">🏠</span>
+            <span class="text-[9px] font-bold uppercase">Home</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">📝</span>
+            <span class="text-[9px] font-bold uppercase">Tasks</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">🎡</span>
+            <span class="text-[9px] font-bold uppercase">Spin</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">📊</span>
+            <span class="text-[9px] font-bold uppercase">Rank</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">👛</span>
+            <span class="text-[9px] font-bold uppercase">Wallet</span>
+        </div>
+    </nav>
+</div>
+
+<script>
+    const area = document.getElementById('click-area');
+    
+    area.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Mencegah zoom/scroll
+        const touch = e.touches[0];
+        spawnText(touch.pageX, touch.pageY);
+    });
+
+    area.addEventListener('mousedown', (e) => {
+        spawnText(e.pageX, e.pageY);
+    });
+
+    function spawnText(x, y) {
+        const el = document.createElement('div');
+        el.innerText = '+10';
+        el.className = 'tap-text';
+        el.style.left = `${x - 20}px`;
+        el.style.top = `${y - 20}px`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 700);
+    }
+</script>
+
+</body>
+</html>
