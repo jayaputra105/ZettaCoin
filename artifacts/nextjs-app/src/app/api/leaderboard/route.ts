@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/response";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { desc } from "drizzle-orm";
-
 
 export async function GET() {
   try {
@@ -18,9 +17,15 @@ export async function GET() {
       .orderBy(desc(users.coins))
       .limit(100);
 
-    const withRank = top.map((u, i) => ({ ...u, position: i + 1 }));
+    // Tambahkan nomor peringkat (index + 1)
+    const withRank = top.map((u, i) => ({
+      ...u,
+      rank: i + 1,
+    }));
+
     return NextResponse.json(withRank);
   } catch (e) {
-    return NextResponse.json({ error: "Gagal ambil leaderboard" }, { status: 500 });
+    console.error(e);
+    return NextResponse.json({ error: "Gagal ambil data" }, { status: 500 });
   }
-}
+      }
