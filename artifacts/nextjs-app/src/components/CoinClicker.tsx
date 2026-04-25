@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FloatingText {
+  id: number;
+  x: number;
+  y: number;
+}
+
+interface Ripple {
   id: number;
   x: number;
   y: number;
@@ -24,29 +30,35 @@ export default function CoinClicker({
 }: CoinClickerProps) {
   const [isPressed, setIsPressed] = useState(false);
   const [floaters, setFloaters] = useState<FloatingText[]>([]);
-  const [nextId, setNextId] = useState(0);
-  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [ripples, setRipples] = useState<Ripple[]>([]);
   const [shake, setShake] = useState(false);
+  
+  // Pake useRef buat ID biar gak re-render berlebihan
+  const nextId = useRef(0);
 
   const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
+    (e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>) => {
       if (locked) {
         setShake(true);
-        setTimeout(() => setShake(false), 500);
-        return;
+        const timer = setTimeout(() => setShake(false), 500);
+        return () => clearTimeout(timer);
       }
 
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      // Handle touch and mouse event
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-      const id = nextId;
-      setNextId((n) => n + 1);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      const id = nextId.current++;
 
       if (!needsAd) {
         const offsetX = (Math.random() - 0.5) * 80;
         setFloaters((prev) => [...prev, { id, x: x + offsetX, y }]);
         setRipples((prev) => [...prev, { id, x, y }]);
+        
         setTimeout(() => {
           setFloaters((prev) => prev.filter((f) => f.id !== id));
           setRipples((prev) => prev.filter((r) => r.id !== id));
@@ -55,7 +67,7 @@ export default function CoinClicker({
 
       onCoin();
     },
-    [nextId, onCoin, locked, needsAd]
+    [onCoin, locked, needsAd]
   );
 
   const coinStyle = locked
@@ -117,31 +129,14 @@ export default function CoinClicker({
         className="relative w-52 h-52 rounded-full cursor-pointer outline-none focus:outline-none"
         style={{ ...coinStyle, overflow: "visible" }}
       >
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: locked
-              ? "none"
-              : "radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.45) 0%, transparent 60%)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.3) 100%)",
-            pointerEvents: "none",
-          }}
-        />
+        <div className="absolute inset-0 rounded-full" style={{ background: locked ? "none" : "radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.45) 0%, transparent 60%)", pointerEvents: "none" }} />
+        <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.3) 100%)", pointerEvents: "none" }} />
 
         <span
           className="absolute inset-0 flex items-center justify-center font-black"
           style={{
             fontSize: locked ? "3.5rem" : "4.5rem",
-            textShadow: locked
-              ? "0 2px 8px rgba(0,0,0,0.8)"
-              : "0 2px 8px rgba(0,0,0,0.6), 0 0 20px rgba(255,220,0,0.8)",
+            textShadow: locked ? "0 2px 8px rgba(0,0,0,0.8)" : "0 2px 8px rgba(0,0,0,0.6), 0 0 20px rgba(255,220,0,0.8)",
             color: locked ? "rgba(255,80,80,0.6)" : needsAd ? "rgba(255,255,220,0.7)" : "rgba(255,255,220,0.95)",
             letterSpacing: "-2px",
           }}
@@ -164,27 +159,28 @@ export default function CoinClicker({
         </AnimatePresence>
       </motion.button>
 
-      <AnimatePresence>
-        {floaters.map((f) => (
-          <motion.div
-            key={f.id}
-            initial={{ opacity: 1, y: f.y, x: f.x - 104, scale: 1.2 }}
-            animate={{ opacity: 0, y: f.y - 110, scale: 0.8 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: "easeOut" }}
-            className="absolute pointer-events-none font-black text-2xl"
-            style={{
-              color: "#FFD700",
-              textShadow: "0 0 12px #FFD700, 0 0 24px rgba(255,215,0,0.6)",
-              zIndex: 100,
-              left: 0,
-              top: 0,
-            }}
-          >
-            +{pointsPerClick}
-          </motion.div>
-        ))}
-      </AnimatePresence>
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 100 }}>
+        <AnimatePresence>
+          {floaters.map((f) => (
+            <motion.div
+              key={f.id}
+              initial={{ opacity: 1, y: f.y - 40, x: f.x - 20, scale: 1.2 }}
+              animate={{ opacity: 0, y: f.y - 150, scale: 0.8 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+              className="absolute font-black text-2xl"
+              style={{
+                color: "#FFD700",
+                textShadow: "0 0 12px #FFD700, 0 0 24px rgba(255,215,0,0.6)",
+                left: 0,
+                top: 0,
+              }}
+            >
+              +{pointsPerClick}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
-}
+       }
