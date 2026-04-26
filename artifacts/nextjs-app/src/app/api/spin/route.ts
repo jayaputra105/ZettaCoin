@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { spinRecords, users, transactions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+
 const MOCK_TELEGRAM_ID = "mock_001";
 const FREE_SPIN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const MAX_ADS_SPINS = 5;
@@ -25,7 +26,7 @@ function weightedRandom(prizes: typeof PRIZES) {
   }
   return 0;
 }
-
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const [user] = await db.select().from(users).where(eq(users.telegramId, MOCK_TELEGRAM_ID)).limit(1);
