@@ -1,39 +1,33 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const BottomNav = dynamic(() => import("@/components/BottomNav"), { ssr: false });
+const ShootingStars = dynamic(() => import("@/components/ShootingStars"), { ssr: false });
 
 export default function LeaderboardScreen() {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/leaderboard")
       .then(r => r.json())
-      .then(data => {
-        setUsers(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then(data => setUsers(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
-  if (loading) return <div className="flex justify-center pt-20 text-yellow-500 animate-pulse font-bold">LOADING RANK...</div>;
-
   return (
-    <div className="flex flex-col gap-3 mt-6">
-      {users.map((user: any, i: number) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center justify-between p-4 rounded-2xl bg-gray-900/80 border border-yellow-500/20"
-        >
-          <div className="flex items-center gap-4">
-            <span className="font-black italic text-yellow-500">#{i + 1}</span>
-            <span className="font-bold text-white uppercase text-sm">{user.name}</span>
+    <div className="min-h-screen bg-black relative p-6 flex flex-col text-white">
+      <ShootingStars />
+      <h1 className="text-4xl font-black text-yellow-500 italic z-10">RANKING</h1>
+      <div className="z-10 relative mt-6 space-y-3">
+        {users.map((u: any, i: number) => (
+          <div key={i} className="p-4 bg-gray-900/50 border border-yellow-500/20 rounded-2xl flex justify-between">
+            <span className="font-bold">#{i + 1} {u.name}</span>
+            <span className="text-yellow-500 font-black">🪙 {u.coins}</span>
           </div>
-          <span className="font-black text-yellow-500">🪙 {user.coins?.toLocaleString()}</span>
-        </motion.div>
-      ))}
+        ))}
+      </div>
+      <BottomNav />
     </div>
   );
-                 }
+            }
