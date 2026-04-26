@@ -1,34 +1,24 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { desc } from "drizzle-orm";
 
-// PAKSA JADI DYNAMIC BIAR GAK ERROR PAS BUILD
+// PAKSA TOTAL JADI DYNAMIC
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export async function GET() {
-  // JURUS PAMUNGKAS: Kalau lagi fase build, langsung skip manggil DB
-  if (process.env.NEXT_PHASE === 'phase-production-build' || !process.env.DATABASE_URL?.startsWith('postgres')) {
+  // JANGAN JALANIN LOGIC DB KALAU LAGI BUILD
+  if (process.env.NEXT_PHASE === 'phase-production-build' || !process.env.DATABASE_URL?.includes('postgres')) {
     return NextResponse.json([]);
   }
 
   try {
-    const top = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        username: users.username,
-        avatar: users.avatar,
-        coins: users.coins,
-      })
-      .from(users)
-      .orderBy(desc(users.coins))
-      .limit(100);
+    // Import DB di dalam fungsi biar gak narik library pas build global
+    const { db } = await import("@/db");
+    const { users } = await import("@/db/schema");
+    const { desc } = await import("drizzle-orm");
 
-    const withRank = top.map((u, i) => ({ ...u, position: i + 1 }));
-    return NextResponse.json(withRank);
+    const data = await db.select().from(users).orderBy(desc(users.coins)).limit(50);
+    return NextResponse.json(data);
   } catch (e) {
-    return NextResponse.json([], { status: 200 }); // Balikin array kosong aja biar gak crash
+    return NextResponse.json([]);
   }
 }
