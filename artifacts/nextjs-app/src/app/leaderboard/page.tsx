@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
-const LeaderboardScreen = dynamic(() => import("@/components/Leaderboard"), {
+// Panggil LeaderboardScreen, bukan Leaderboard doang!
+const LeaderboardComponent = dynamic(() => import("@/components/LeaderboardScreen"), { 
   ssr: false,
-  loading: () => <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>
+  loading: () => <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading Sultan...</div>
 });
 
 export default function LeaderboardPage() {
-  return <LeaderboardScreen />;
+  return <LeaderboardComponent />;
 }
