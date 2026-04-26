@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic'; // JIMAT ANTI ERROR BUILD
 "use client";
+export const dynamic = 'force-dynamic'; // JIMAT ANTI ERROR BUILD
+
 
 import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
