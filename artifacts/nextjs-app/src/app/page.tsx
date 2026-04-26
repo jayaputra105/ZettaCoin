@@ -1,26 +1,146 @@
-import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { desc } from "drizzle-orm";
+export const dynamic = 'force-dynamic'; // JIMAT ANTI ERROR BUILD
+"use client";
 
-export async function GET() {
-  try {
-    const top = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        username: users.username,
-        avatar: users.avatar,
-        coins: users.coins,
-        rank: users.rank,
-      })
-      .from(users)
-      .orderBy(desc(users.coins))
-      .limit(100);
+import { useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { motion } from "framer-motion";
+import BottomNav from "@/components/BottomNav";
 
-    const withRank = top.map((u, i) => ({ ...u, position: i + 1 }));
-    return NextResponse.json(withRank);
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
-  }
+// Gunakan dynamic import untuk komponen yang berat/pake library aneh biar gak error SSR
+const ShootingStars = dynamic(() => import("@/components/ShootingStars"), { ssr: false });
+const CoinClicker = dynamic(() => import("@/components/CoinClicker"), { ssr: false });
+const AdModal = dynamic(() => import("@/components/AdModal"), { ssr: false });
+
+const MAX_ADS = 15;
+const COOLDOWN_MS = 60 * 60 * 1000;
+
+const mockUser = {
+  name: "Zetta Hunter",
+  username: "@zettahunter",
+  avatar: "https://api.dicebear.com/9.x/pixel-art/svg?seed=zettahunter&backgroundColor=b6e3f4",
+  rank: 42,
+  zettaCoins: 128450,
+  zettaPoints: 98200,
+};
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
+  return n.toString();
 }
+
+function formatCountdown(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+export default function Home() {
+  const [coins, setCoins] = useState(0); // Start dari 0 biar gak beda sama server
+  const [points, setPoints] = useState(0);
+  const [lastFreeClick, setLastFreeClick] = useState<number | null>(null);
+  const [adsUsed, setAdsUsed] = useState(0);
+  const [showAd, setShowAd] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const [isClient, setIsClient] = useState(false); // Penanda udah di browser
+
+  // AMANKAN LOCALSTORAGE
+  useEffect(() => {
+    setIsClient(true);
+    const stored = localStorage.getItem("zetta_last_free");
+    const storedAds = localStorage.getItem("zetta_ads_used");
+    if (stored) setLastFreeClick(Number(stored));
+    if (storedAds) setAdsUsed(Number(storedAds));
+    setCoins(mockUser.zettaCoins); // Load data asli setelah di browser
+    setPoints(mockUser.zettaPoints);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!isClient) return <div className="min-h-screen bg-black" />; // Loading state simpel biar build aman
+
+  const sinceLastFree = lastFreeClick ? now - lastFreeClick : COOLDOWN_MS;
+  const isFreeAvailable = sinceLastFree >= COOLDOWN_MS;
+  const currentAdsUsed = isFreeAvailable ? 0 : adsUsed;
+  const adsRemaining = MAX_ADS - currentAdsUsed;
+  const isLocked = !isFreeAvailable && adsRemaining <= 0;
+  const timeUntilReset = lastFreeClick ? COOLDOWN_MS - sinceLastFree : 0;
+
+  const giveCoins = (amount: number) => {
+    setCoins((c) => c + amount);
+    setPoints((p) => p + amount);
+  };
+
+  const handleCoinClick = () => {
+    if (isFreeAvailable) {
+      const ts = Date.now();
+      setLastFreeClick(ts);
+      setAdsUsed(0);
+      localStorage.setItem("zetta_last_free", String(ts));
+      localStorage.setItem("zetta_ads_used", "0");
+      giveCoins(10);
+    } else if (adsRemaining > 0) {
+      setShowAd(true);
+    }
+  };
+
+  const handleAdComplete = () => {
+    const newAds = currentAdsUsed + 1;
+    setAdsUsed(newAds);
+    localStorage.setItem("zetta_ads_used", String(newAds));
+    setShowAd(false);
+    giveCoins(10);
+  };
+
+  let statusLabel: React.ReactNode;
+  let statusColor: string;
+  if (isFreeAvailable) {
+    statusLabel = "✅ Klik gratis tersedia!";
+    statusColor = "#4ade80";
+  } else if (isLocked) {
+    statusLabel = <>🔒 Terkunci — reset dalam <span style={{ color: "#FFD700", fontWeight: 900 }}>{formatCountdown(timeUntilReset)}</span></>;
+    statusColor = "rgba(255,100,100,0.85)";
+  } else {
+    statusLabel = <>🎬 Iklan: <span style={{ color: "#FFD700", fontWeight: 900 }}>{adsRemaining}/{MAX_ADS}</span> | reset <span style={{ color: "rgba(255,215,0,0.7)" }}>{formatCountdown(timeUntilReset)}</span></>;
+    statusColor = "rgba(255,215,0,0.75)";
+  }
+
+  return (
+    <div className="relative min-h-screen w-full overflow-hidden flex flex-col" style={{ background: "radial-gradient(ellipse at 50% 0%, #0d0d1a 0%, #050508 60%, #000000 100%)" }}>
+      <ShootingStars />
+      <div className="relative z-10 flex flex-col min-h-screen max-w-md mx-auto w-full px-4">
+        <header className="pt-5 pb-3">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: "rgba(10,8,2,0.75)", border: "1.5px solid rgba(255,215,0,0.45)", backdropFilter: "blur(20px)" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full border-2 border-yellow-600 overflow-hidden"><img src={mockUser.avatar} alt="Avatar" /></div>
+              <div>
+                <p className="font-bold text-sm" style={{ color: "#FFD700" }}>{mockUser.name}</p>
+                <p className="text-xs text-gray-500">{mockUser.username}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-black text-yellow-500">🪙 {formatNumber(coins)}</p>
+              <p className="text-[10px] text-gray-400">Rank #{mockUser.rank}</p>
+            </div>
+          </motion.div>
+        </header>
+
+        <div className="flex-1 flex flex-col items-center justify-center gap-6">
+          <CoinClicker onCoin={handleCoinClick} locked={isLocked} />
+          <div className="bg-gray-900/50 border border-yellow-900/30 p-3 rounded-xl text-center">
+             <p className="text-xs" style={{ color: statusColor }}>{statusLabel}</p>
+          </div>
+        </div>
+
+        <BottomNav />
+      </div>
+
+      <AdModal open={showAd} onComplete={handleAdComplete} onClose={() => setShowAd(false)} />
+    </div>
+  );
+  }
