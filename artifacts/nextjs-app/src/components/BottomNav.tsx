@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, CheckSquare, Star, Trophy, Wallet } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { id: "home", label: "Home", icon: Home, href: "/" },
@@ -14,6 +15,14 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  // Paksa ikon cuma muncul setelah halaman nempel di browser
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div className="fixed bottom-0 w-full h-16 bg-black border-t border-yellow-500/20" />;
 
   return (
     <nav
@@ -67,4 +76,4 @@ export default function BottomNav() {
       </div>
     </nav>
   );
-}
+            }
