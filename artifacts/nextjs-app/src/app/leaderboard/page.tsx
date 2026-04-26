@@ -1,28 +1,13 @@
 "use client";
 
-// @ts-nocheck
-export const dynamic = "force-static";
-export const dynamicParams = false;
-
-
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
-// Kita bungkus SEMUA yang ada UI-nya ke dalam dynamic import
-const LeaderboardScreen = dynamic(() => import("@/components/LeaderboardScreen"), { 
+const LeaderboardScreen = dynamic(() => import("@/components/Leaderboard"), {
   ssr: false,
-  loading: () => <div className="min-h-screen bg-black" /> 
+  loading: () => <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>
 });
 
 export default function LeaderboardPage() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Pas build, Next.js cuma liat null. Dia gak bakal nemu alasan buat error.
-  if (!mounted) return null;
-
   return <LeaderboardScreen />;
 }
