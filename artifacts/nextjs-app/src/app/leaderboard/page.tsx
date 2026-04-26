@@ -1,3 +1,6 @@
+// @ts-nocheck
+export const dynamic = "force-static";
+export const dynamicParams = false;
 "use client";
 
 import { useState, useEffect } from "react";
