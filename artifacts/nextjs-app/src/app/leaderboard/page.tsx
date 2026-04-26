@@ -1,36 +1,20 @@
 "use client";
-
-import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
-// INI RAHASIANYA: Load semua yang "mewah" cuma pas di browser (HP)
+// INI JURU KUNCI: Kita bener-bener isolasi semua kodingan mewah
 const LeaderboardScreen = dynamic(() => import("@/components/LeaderboardScreen"), { ssr: false });
 const BottomNav = dynamic(() => import("@/components/BottomNav"), { ssr: false });
 const ShootingStars = dynamic(() => import("@/components/ShootingStars"), { ssr: false });
 
 export default function LeaderboardPage() {
-  const [isClient, setIsClient] = useState(false);
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    setIsClient(true);
-    fetch("/api/leaderboard")
-      .then(r => r.json())
-      .then(data => setUsers(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, []);
-
-  // Pas Build: Next.js cuma liat div kosong hitam. Dia bakalan bilang "Oke aman!"
-  if (!isClient) return <div className="min-h-screen bg-black" />;
-
   return (
-    <div className="min-h-screen bg-black relative p-6 flex flex-col">
+    <main className="min-h-screen bg-black relative p-6 flex flex-col">
       <ShootingStars />
-      <h1 className="text-4xl font-black text-yellow-500 italic z-10 tracking-tighter">RANKING</h1>
-      <div className="z-10 relative flex-1 overflow-y-auto">
-        <LeaderboardScreen users={users} />
+      <h1 className="text-4xl font-black text-yellow-500 italic z-10">RANKING</h1>
+      <div className="z-10 relative flex-1">
+        <LeaderboardScreen />
       </div>
       <BottomNav />
-    </div>
+    </main>
   );
-    }
+}
