@@ -1,11 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { desc } from "drizzle-orm";
 
+// JIMAT BIAR TERMUX GAK PUSING PAS BUILD
 export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
+    // Proteksi kalau env kosong pas build
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json([]);
+    }
+
     const top = await db
       .select({
         id: users.id,
@@ -18,22 +25,12 @@ export async function GET() {
       .orderBy(desc(users.coins))
       .limit(100);
 
-    // Tambahkan nomor peringkat (index + 1)
-    const withRank = top.map((u, i) => ({ 
-      ...u, 
-      rank: i + 1 
-    }));
-    const databaseUrl = process.env.DATABASE_URL;
-
-  // Kalau kuncinya gak ada (pas build di Termux), jangan panggil neon()!
-  if (!databaseUrl) {
-    console.log("Database URL skip dulu buat build...");
-    return NextResponse.json([], { status: 200 }); // Balikin array kosong aja
-      }
-
+    // Tambahin posisi ranking 1, 2, 3...
+    const withRank = top.map((u, i) => ({ ...u, position: i + 1 }));
+    
     return NextResponse.json(withRank);
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: "Gagal ambil data" }, { status: 500 });
+    return NextResponse.json({ error: "DB Error" }, { status: 500 });
   }
 }
