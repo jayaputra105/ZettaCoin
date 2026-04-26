@@ -16,6 +16,13 @@ const PRIZES = [
   { label: "1000 Koin", coins: 1000, usdt: 0, weight: 7 },
   { label: "10 USDT", coins: 0, usdt: 10, weight: 0 }, // Weight 0 berarti gak bakal dapet kecuali lu ubah
 ];
+const databaseUrl = process.env.DATABASE_URL;
+
+  // Kalau kuncinya gak ada (pas build di Termux), jangan panggil neon()!
+  if (!databaseUrl) {
+    console.log("Database URL skip dulu buat build...");
+    return NextResponse.json([], { status: 200 }); // Balikin array kosong aja
+  }
 
 function weightedRandom(prizes: typeof PRIZES) {
   const total = prizes.reduce((s, p) => s + p.weight, 0);
