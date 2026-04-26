@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100dvh;
+  background: #000;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 :root {
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;
