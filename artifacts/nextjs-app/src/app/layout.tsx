@@ -20,17 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body
-        style={{
-          margin: 0,
-          padding: 0,
-          overflow: "hidden",
-          height: "100dvh",
-          background: "#000",
-        }}
-      >
+      <body>
         {children}
       </body>
     </html>
   );
-}
+                                   }
