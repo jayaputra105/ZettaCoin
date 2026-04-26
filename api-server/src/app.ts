@@ -7,17 +7,17 @@ import { logger } from "./lib/logger";
 const app: Express = express();
 
 app.use(
-  pinoHttp({
+  (pinoHttp as any)({ // <--- Pake 'as any' biar TS gak mogok kerja
     logger,
     serializers: {
-      req(req) {
+      req(req: any) { // <--- Tambahin tipe 'any'
         return {
           id: req.id,
           method: req.method,
           url: req.url?.split("?")[0],
         };
       },
-      res(res) {
+      res(res: any) { // <--- Tambahin tipe 'any'
         return {
           statusCode: res.statusCode,
         };
@@ -25,6 +25,7 @@ app.use(
     },
   }),
 );
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
