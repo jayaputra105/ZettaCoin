@@ -5,6 +5,7 @@ import { eq, sql } from "drizzle-orm";
 
 const MOCK_TELEGRAM_ID = "mock_001";
 
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const [user] = await db.select().from(users).where(eq(users.telegramId, MOCK_TELEGRAM_ID)).limit(1);
