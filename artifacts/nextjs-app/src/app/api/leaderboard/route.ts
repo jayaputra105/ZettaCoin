@@ -25,7 +25,7 @@ export async function GET() {
       .orderBy(desc(users.coins))
       .limit(100);
 
-    // Tambahin posisi ranking 1, 2, 3...
+    // Tambahin posisi ranking 1, 2, 3.....
     const withRank = top.map((u, i) => ({ ...u, position: i + 1 }));
     
     return NextResponse.json(withRank);
