@@ -23,6 +23,13 @@ export async function GET() {
       ...u, 
       rank: i + 1 
     }));
+    const databaseUrl = process.env.DATABASE_URL;
+
+  // Kalau kuncinya gak ada (pas build di Termux), jangan panggil neon()!
+  if (!databaseUrl) {
+    console.log("Database URL skip dulu buat build...");
+    return NextResponse.json([], { status: 200 }); // Balikin array kosong aja
+      }
 
     return NextResponse.json(withRank);
   } catch (e) {
