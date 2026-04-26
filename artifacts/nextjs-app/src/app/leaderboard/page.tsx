@@ -1,20 +1,23 @@
 "use client";
+
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
-// INI JURU KUNCI: Kita bener-bener isolasi semua kodingan mewah
-const LeaderboardScreen = dynamic(() => import("@/components/LeaderboardScreen"), { ssr: false });
-const BottomNav = dynamic(() => import("@/components/BottomNav"), { ssr: false });
-const ShootingStars = dynamic(() => import("@/components/ShootingStars"), { ssr: false });
+// Kita bungkus SEMUA yang ada UI-nya ke dalam dynamic import
+const LeaderboardScreen = dynamic(() => import("@/components/LeaderboardScreen"), { 
+  ssr: false,
+  loading: () => <div className="min-h-screen bg-black" /> 
+});
 
 export default function LeaderboardPage() {
-  return (
-    <main className="min-h-screen bg-black relative p-6 flex flex-col">
-      <ShootingStars />
-      <h1 className="text-4xl font-black text-yellow-500 italic z-10">RANKING</h1>
-      <div className="z-10 relative flex-1">
-        <LeaderboardScreen />
-      </div>
-      <BottomNav />
-    </main>
-  );
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Pas build, Next.js cuma liat null. Dia gak bakal nemu alasan buat error.
+  if (!mounted) return null;
+
+  return <LeaderboardScreen />;
 }
