@@ -5,7 +5,6 @@
 // Baris sakti buat nipu build worker
 export const config = { unoptimized: true }; 
 export const dynamic = 'force-dynamic';
-"use client";
 
 export const dynamic = 'force-dynamic';
 
