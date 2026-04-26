@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
-// INI RAHASIANYA: Load UI-nya cuma pas udah di tangan user (HP)
-const LeaderboardContent = dynamic(() => import("@/components/LeaderboardContent"), { ssr: false });
+// INI RAHASIANYA: Load semua yang "mewah" cuma pas di browser (HP)
+const LeaderboardScreen = dynamic(() => import("@/components/LeaderboardScreen"), { ssr: false });
 const BottomNav = dynamic(() => import("@/components/BottomNav"), { ssr: false });
 const ShootingStars = dynamic(() => import("@/components/ShootingStars"), { ssr: false });
 
@@ -20,17 +20,17 @@ export default function LeaderboardPage() {
       .catch(() => {});
   }, []);
 
-  // Pas Build: Next.js cuma liat div kosong hitam. Gak ada yang perlu diprotes.
+  // Pas Build: Next.js cuma liat div kosong hitam. Dia bakalan bilang "Oke aman!"
   if (!isClient) return <div className="min-h-screen bg-black" />;
 
   return (
-    <div className="min-h-screen bg-black relative p-6">
+    <div className="min-h-screen bg-black relative p-6 flex flex-col">
       <ShootingStars />
-      <h1 className="text-3xl font-black text-yellow-500 italic z-10">LEADERBOARD</h1>
-      <div className="z-10 relative">
-        <LeaderboardContent users={users} />
+      <h1 className="text-4xl font-black text-yellow-500 italic z-10 tracking-tighter">RANKING</h1>
+      <div className="z-10 relative flex-1 overflow-y-auto">
+        <LeaderboardScreen users={users} />
       </div>
       <BottomNav />
     </div>
   );
-            }
+    }
